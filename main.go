@@ -44,14 +44,14 @@ func map2str(m map[string]string) string {
 	return sb.String()
 }
 
-func (r *NamespaceRecord) AddServiceLabels(labels map[string]string, v string) (err error) {
+func (r *NamespaceRecord) AddServiceLabels(labels map[string]string, t string, v string) (err error) {
 	if labels == nil {
 		return
 	}
 	if len(labels) == 0 {
 		return
 	}
-	l := map2str(labels)
+	l := t + ":" + map2str(labels)
 	if r.ServiceLabels[l] != "" {
 		err = fmt.Errorf("service already existed: %s -> %s", l, r.ServiceLabels[l])
 		return
@@ -133,7 +133,14 @@ func main() {
 
 	for _, service := range services.Items {
 		r := store.Find(service.Namespace)
-		if errLocal := r.AddServiceLabels(service.Spec.Selector, service.Name); errLocal != nil {
+		var t string
+		if service.Spec.Type == corev1.ServiceTypeClusterIP &&
+			service.Spec.ClusterIP == corev1.ClusterIPNone {
+			t = "headless"
+		} else {
+			t = strings.ToLower(string(service.Spec.Type))
+		}
+		if errLocal := r.AddServiceLabels(service.Spec.Selector, t, service.Name); errLocal != nil {
 			log.Printf("%s: service %s: %s", service.Namespace, service.Name, errLocal.Error())
 		}
 	}
