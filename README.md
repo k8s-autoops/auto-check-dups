@@ -1,4 +1,4 @@
-# template-autoops-cronjob
+# auto-check-dups
 
 ## Usage
 
@@ -9,38 +9,41 @@ Create namespace `autoops` and apply yaml resources as described below.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: template-autoops-cronjob
+  name: auto-check-dups
   namespace: autoops
 ---
 # create clusterrole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: template-autoops-cronjob
+  name: auto-check-dups
 rules:
   - apiGroups: [""]
-    resources: ["pods"]
+    resources: ["services"]
+    verbs: ["list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
     verbs: ["list"]
 ---
 # create clusterrolebinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
-  name: template-autoops-cronjob
+  name: auto-check-dups
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: template-autoops-cronjob
+  name: auto-check-dups
 subjects:
   - kind: ServiceAccount
-    name: template-autoops-cronjob
+    name: auto-check-dups
     namespace: autoops
 ---
 # create cronjob
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: template-autoops-cronjob
+  name: auto-check-dups
   namespace: autoops
 spec:
   schedule: "*/5 * * * *"
@@ -48,10 +51,10 @@ spec:
     spec:
       template:
         spec:
-          serviceAccount: template-autoops-cronjob
+          serviceAccount: auto-check-dups
           containers:
-            - name: template-autoops-cronjob
-              image: autoops/template-autoops-cronjob
+            - name: auto-check-dups
+              image: autoops/auto-check-dups
           restartPolicy: OnFailure
 ```
 
